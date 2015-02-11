@@ -54,6 +54,11 @@ class Scope(object):
             # id has been defined in a parent.
             self._parent.assign(id, defn)
 
+    def create_local(self, id, defn):
+        if id in self._defns:
+            raise Exception("Can't create a variable that has already been defined: %s"%id)
+        self._defns[id] = defn
+
 
 
 
@@ -84,7 +89,7 @@ class FunctionDef(Datum):
     def __init__(self, name, args, body):
         self._name = name[1]
         self._args = [a[1] for a in args]
-        self._body = make_datum(body)
+        self._body = body
 
     def __call__(self, parent_scope, *arg_vals):
         assert (len(self._args) == len(arg_vals))
@@ -92,7 +97,7 @@ class FunctionDef(Datum):
         for (id, val) in zip(self._args, arg_vals):
             # we store the values of the args - they might not actually be
             # computed.  This allows lazy evaluation of function args
-            scope.assign(id, ArgExpr(parent_scope, val))
+            scope.create_local(id, ArgExpr(parent_scope, val))
         return self._body.evaluate(scope)
         #last_value = None
         #for item in self._body:
@@ -101,19 +106,6 @@ class FunctionDef(Datum):
 
     def evaluate(self, parent_scope):
         parent_scope.assign(self._name, self)
-
-
-class List(Datum):
-    def __init__(self, items):
-        self._items = items
-
-    def evaluate(self, parent_scope):
-        return  [i.evaluate(parent_scope) for i in self._items]
-
-    @property
-    def value(self):
-        return [i.value for i in self._items]
-
 
 class ExprSeq(Datum):
     def __init__(self, items):
@@ -129,6 +121,10 @@ class ExprSeq(Datum):
     def value(self):
         return [i.value for i in self._items]
 
+
+class List(ExprSeq):
+    def evaluate(self, parent_scope):
+        return  [i.evaluate(parent_scope) for i in self._items]
 
 """
 (defun f (x) (+ x 1))
@@ -201,6 +197,7 @@ def make_datum(t):
     elif dtype == 'SET':
         return Set(**dval)
     elif dtype == 'DEFUN':
+        dval['body'] = make_datum(dval['body'])
         return FunctionDef(**dval)
     elif dtype == 'FUNC_CALL':
         dval['arg_exprs'] = [make_datum(a) for a in dval['arg_exprs'][1]]

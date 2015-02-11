@@ -190,6 +190,3 @@ global_scope = GlobalScope()
 
 print(code)
 print(code.evaluate(global_scope))
-
-
-
