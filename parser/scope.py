@@ -171,13 +171,11 @@ class VarRef(Datum):
     def evaluate(self, parent_scope):
         return parent_scope.get(self._name)
 
-def ifBuiltin(parent_scope, condition, true_expr, *false_expr):
+def ifBuiltin(parent_scope, condition, true_expr, false_expr):
     if condition.evaluate(parent_scope):
         return true_expr.evaluate(parent_scope)
-    elif false_expr:
-        return false_expr[0].evaluate(parent_scope)
     else:
-        return None
+        return false_expr.evaluate(parent_scope)
 
 def plusBuiltin(parent_scope, *args):
     x = [a.evaluate(parent_scope) for a in args]
