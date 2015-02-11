@@ -92,7 +92,7 @@ class TestFunctionCall(unittest.TestCase):
             return f
         scope = Scope()
         for x in "fgh":
-            scope.assign(('ID', x), makeDef(x))
+            scope.assign(x, makeDef(x))
         for x in "fgh":
             funcCall = FunctionCall(('ID', x), [])
             self.assertEqual(funcCall.evaluate(scope), x)
