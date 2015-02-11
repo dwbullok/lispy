@@ -175,16 +175,21 @@ def ifBuiltin(parent_scope, condition, true_expr, *false_expr):
     if condition.evaluate(parent_scope):
         return true_expr.evaluate(parent_scope)
     elif false_expr:
-        return false_expr[1].evaluate(parent_scope)
+        return false_expr[0].evaluate(parent_scope)
     else:
         return None
 
 def plusBuiltin(parent_scope, *args):
-    return sum([a.evaluate(parent_scope) for a in args])
+    x = [a.evaluate(parent_scope) for a in args]
+    return sum(x)
+
 
 def equalsBuiltin(parent_scope, *args):
-    for a in args:
-        if a.evaluate(parent_scope):
+    last_value = args[0].evaluate(parent_scope)
+    for a in args[1:]:
+        v = a.evaluate(parent_scope)
+        if v==last_value:
+            last_value = v
             continue
         return False
     return True
@@ -213,6 +218,6 @@ def make_datum(t):
 class GlobalScope(Scope):
     def __init__(self):
         super().__init__()
-        self.assign('=', plusBuiltin)
+        self.assign('=', equalsBuiltin)
         self.assign('+', plusBuiltin)
         self.assign('if', ifBuiltin)
