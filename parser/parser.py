@@ -80,69 +80,88 @@ from ply import lex, yacc
 
 lexer = lex.lex()
 
-def p_func_call(p):
-    '''func_call : LPAREN ID data RPAREN
-    '''
-    p[0] = ('FUNC_CALL', {'name': p[2], 'arg_vals': p[3]})
 
-def p_sexp(p):
-    '''sexp : LPAREN RPAREN
-            | LPAREN data RPAREN
-    '''
-    if len(p) == 3:
-        p[0] =  ('SEXP',list())
-    else:
-        p[0] = ('SEXP', p[2])
-
-
-def p_data(p):
-    '''data : datum
-            | datum data
-    '''
-    if len(p)==2:
-        p[0] =[ p[1] ]
-    else:
-        p[0] = [ p[1] ] + p[2]
-
-def p_ids(p):
-    '''ids : ID
-            | ID ids
-    '''
-    if len(p)==2:
-        p[0] =[ p[1] ]
-    else:
-        p[0] = [ p[1] ] + p[2]
-
-def p_datum(p):
-    '''datum : BOOL
-             | STRING
-             | INT
-             | FLOAT
-             | sexp
-             | defun
-             | set
-             | func_call
+def p_expr(p):
+    '''expr : atom
+            | defun
+            | set
+            | func_call
+            | list
     '''
     p[0] = p[1]
 
+def p_func_call(p):
+    '''func_call : LPAREN ID exprseq RPAREN
+    '''
+    p[0] = ('FUNC_CALL', {'name': p[2], 'arg_exprs': p[3]})
+
+
+def p_ids(p):
+    '''ids : ID
+           | ID ids
+    '''
+    if len(p)==2:
+        p[0] =[ p[1] ]
+    else:
+        p[0] = [ p[1] ] + p[2]
+
+
+def p_atom(p):
+    '''atom : BOOL
+            | STRING
+            | INT
+            | FLOAT
+            | ID
+    '''
+    p[0] = p[1]
+
+def p_exprseq(p):
+    '''exprseq : expr
+               | expr exprseq
+    '''
+    if len(p)==2:
+        p[0] = ('EXPRSEQ', [p[1]])
+    else:
+        p[0] = ('EXPRSEQ', [p[1]] + p[2][1])
+
+def p_list (p):
+    '''list : LPAREN exprseq RPAREN
+            | LPAREN RPAREN
+    '''
+    if len(p) == 3:
+        p[0] = ('LIST', list())
+    else:
+        p[0] = ('LIST', p[2][1])
+
+
 def p_defun(p):
-    '''defun : LPAREN DEFUN ID LPAREN ids RPAREN data RPAREN
+    '''defun : LPAREN DEFUN ID LPAREN ids RPAREN exprseq RPAREN
     '''
     p[0] = ('DEFUN', {'name': p[3], 'args': p[5], 'body': p[7]})
 
 def p_set(p):
-    '''set : LPAREN SET ID datum RPAREN
+    '''set : LPAREN SET ID expr RPAREN
     '''
     p[0] = ('SET', {'name': p[3], 'value': p[4]})
 
 
 
-parser = yacc.yacc()
+parser = yacc.yacc(debug=True)
 
 
 
-test="""( #t
-          #f
+
+test = """( ( + 1 2)
+            ( + 1 2) )"""
+
+#test = """(1 3 4)"""
+
+test = """((defun f (x) (+ x 2))
+          (f 8))"""
+test = """( #t
+  #f)"""
+
+test = """(
           (defun f (x)
             (defun g (y) (+ x y 4.0))
             (+ (g 5) x 1)
@@ -153,27 +172,20 @@ test="""( #t
         )
 """
 
-test = """(( + 1 2) ( + 1 2))"""
-
-#test = """((defun f (x) (+ x 2))
-#          (f 8))"""
-
-
-
 """while True:
     tok = lexer.token()
     if not tok: break
     print(tok)
 """
-from scope import make_datum, Scope, BuiltinFunction
 
+from scope import make_datum, GlobalScope
+import logging
+log = logging.getLogger()
 
-tree = parser.parse(test)
-
+tree = parser.parse(test,debug=log)
 P.pprint(tree)
 code = make_datum(tree)
-global_scope = Scope()
-global_scope.assign('+', BuiltinFunction(lambda x, y: x.value+y.value))
+global_scope = GlobalScope()
 
 
 print(code)
