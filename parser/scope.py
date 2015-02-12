@@ -112,9 +112,10 @@ class ExprSeq(Datum):
         self._items = items
 
     def evaluate(self, parent_scope):
+        scope = Scope(parent_scope)
         last_value = None
         for e in self._items:
-            last_value = e.evaluate(parent_scope)
+            last_value = e.evaluate(scope)
         return last_value
 
     @property
@@ -125,16 +126,6 @@ class ExprSeq(Datum):
 class List(ExprSeq):
     def evaluate(self, parent_scope):
         return  [i.evaluate(parent_scope) for i in self._items]
-
-"""
-(defun f (x) (+ x 1))
-(defun name1 (x) (+ x 1))
-(set s "name1")
-(`s 4)
-(name1 4)
-
-"""
-
 
 
 class FunctionCall(Datum):
@@ -153,7 +144,7 @@ class FunctionCall(Datum):
 class Set(Datum):
     def __init__(self, name, value):
         self._name = name[1]
-        self._value = make_datum(value)
+        self._value = value
 
     def evaluate(self, parent_scope):
         v = self._value.evaluate(parent_scope)
@@ -173,20 +164,73 @@ def ifBuiltin(parent_scope, condition, true_expr, false_expr):
     else:
         return false_expr.evaluate(parent_scope)
 
+def expandArgs(parent_scope, *args):
+    return [a.evaluate(parent_scope) for a in args]
+
 def plusBuiltin(parent_scope, *args):
-    x = [a.evaluate(parent_scope) for a in args]
+    x = expandArgs(parent_scope, args);
     return sum(x)
 
+def minusBuiltin(parent_scope, *args):
+    x = expandArgs(parent_scope, args);
+    return reduce(operator.sub, x[1:], x[0])
 
-def equalsBuiltin(parent_scope, *args):
-    last_value = args[0].evaluate(parent_scope)
-    for a in args[1:]:
-        v = a.evaluate(parent_scope)
-        if v==last_value:
-            last_value = v
-            continue
-        return False
-    return True
+def timesBuiltin(parent_scope, *args):
+    x = expandArgs(parent_scope, args);
+    return reduce(operator.mul, x, 1)
+
+def divBuiltin(parent_scope, *args):
+    x = expandArgs(parent_scope, args);
+    def sensitiveDiv(a, b):
+        if type(a) is float or type(b) is float:
+            return a / b
+        else:
+            return a // b
+    return reduce(sensitiveDiv, x[1:], x[0])
+
+
+def compareBuiltin(op):
+    def f(parent_scope, *args):
+        last_value = args[0].evaluate(parent_scope)
+        for a in args[1:]:
+            v = a.evaluate(parent_scope)
+            if op(v, last_value):
+                last_value = v
+                continue
+            return False
+        return True
+    return f
+
+eqBuiltin = compareBuiltin(lambda x, y: x == y)
+neqBuiltin = compareBuiltin(lambda x, y: x != y)
+ltBuiltin = compareBuiltin(lambda x, y: x < y)
+gtBuiltin = compareBuiltin(lambda x, y: x > y)
+gteBuiltin = compareBuiltin(lambda x, y: x >= y)
+lteBuiltin = compareBuiltin(lambda x, y: x <= y)
+
+def whileBuiltin(parent_scope, cond, body):
+    last_value = None
+    while (cond.evaluate(parent_scope)):
+        last_value = body.evaluate(parent_scope)
+    return last_value
+
+def beginBuiltin(parent_scope, body):
+    return body.evaluate(parent_scope)
+
+global_builtins = {
+    '+': plusBuiltin,
+    '-': minusBuiltin,
+    '*': timesBuiltin,
+    '/': divBuiltin,
+    '=': eqBuiltin,
+    '!=': neqBuiltin,
+    '<': ltBuiltin,
+    '>': gtBuiltin,
+    '<=': lteBuiltin,
+    '>=': gteBuiltin,
+    'if': ifBuiltin
+}
+
 
 def make_datum(t):
     dtype, dval = t
@@ -195,6 +239,7 @@ def make_datum(t):
     elif dtype == 'ID':
         return VarRef(dval)
     elif dtype == 'SET':
+        dval['value'] = make_datum(dval['value'])
         return Set(**dval)
     elif dtype == 'DEFUN':
         dval['body'] = make_datum(dval['body'])
@@ -211,8 +256,7 @@ def make_datum(t):
 
 
 class GlobalScope(Scope):
-    def __init__(self):
+    def __init__(self, builtins):
         super().__init__()
-        self.assign('=', equalsBuiltin)
-        self.assign('+', plusBuiltin)
-        self.assign('if', ifBuiltin)
+        for id, f in builtins.items():
+            self.assign(id, f)

@@ -178,14 +178,14 @@ test = """(
     print(tok)
 """
 
-from scope import make_datum, GlobalScope
+from scope import make_datum, GlobalScope, global_builtins
 import logging
 log = logging.getLogger()
 
 tree = parser.parse(test,debug=log)
 P.pprint(tree)
 code = make_datum(tree)
-global_scope = GlobalScope()
+global_scope = GlobalScope(global_builtins)
 
 
 print(code)

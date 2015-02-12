@@ -1,6 +1,6 @@
 import unittest
 from collections import namedtuple
-from parser.scope import Scope, ArgExpr, FunctionDef, ExprSeq, List, FunctionCall
+from parser.scope import Scope, ArgExpr, FunctionDef, ExprSeq, List, FunctionCall, Set, VarRef
 
 class Expression(object):
     def evaluate(self, scope):
@@ -96,6 +96,23 @@ class TestFunctionCall(unittest.TestCase):
         for x in "fgh":
             funcCall = FunctionCall(('ID', x), [])
             self.assertEqual(funcCall.evaluate(scope), x)
+
+class TestSet(unittest.TestCase):
+    def test_evaluate(self):
+        scope = Scope()
+        mySet = Set(('ID', 'x'), MockEvaluate(lambda x: 10, 10))
+        mySet.evaluate(scope)
+        self.assertEqual(scope.get('x'), 10)
+
+class TestVarRef(unittest.TestCase):
+    def test_evaluate(self):
+        scope = Scope()
+        for x in "abcd":
+            scope.assign(x, x)
+
+        for x in "abcd":
+            r = VarRef(x)
+            self.assertEqual(r.evaluate(scope), x)
 
 
 
