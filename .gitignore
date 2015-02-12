@@ -1,6 +1,7 @@
+.idea
 lispy.iml
 parser/parser.iml
-
 parser/__pycache__
 parser/parser.out
 parser/parsetab.py
+test/__pycache__

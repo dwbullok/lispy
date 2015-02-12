@@ -1,12 +1,17 @@
 import unittest
 from collections import namedtuple
-from parser.scope import Scope, ArgExpr, FunctionDef, ExprSeq, List, FunctionCall, Set, VarRef
+
+from parser.scope import Scope, ArgExpr, FunctionDef, ExprSeq, List, \
+    FunctionCall, Set, VarRef
+
 
 class Expression(object):
     def evaluate(self, scope):
         return "I work"
 
+
 MockEvaluate = namedtuple('MockEvaluate', 'evaluate value')
+
 
 class TestScope(unittest.TestCase):
     def setUp(self):
@@ -47,7 +52,8 @@ class TestScope(unittest.TestCase):
         self.isolatedScope.assign("argE", argExpr)
         self.assertEqual(self.isolatedScope.get("argE"), "I work")
 
-class TestFunctionDef (unittest.TestCase):
+
+class TestFunctionDef(unittest.TestCase):
     def test_evaluate(self):
         scope = Scope()
         f = FunctionDef(('ID', 'f'), [], None)
@@ -59,10 +65,10 @@ class TestFunctionDef (unittest.TestCase):
         f = FunctionDef(('ID', 'f'), [], Expression())
         self.assertEqual(f(scope), "I work")
 
-
         body = MockEvaluate(lambda scope: scope.get('x'), 1)
         g = FunctionDef(('ID', 'g'), [('ID', 'x')], body)
         self.assertEqual(g(scope, MockEvaluate(lambda x: 5, 1)), 5)
+
 
 class TestExprSeq(unittest.TestCase):
     def test_evaluate(self):
@@ -74,6 +80,7 @@ class TestExprSeq(unittest.TestCase):
         self.assertEqual(exprSeq.evaluate(scope), 9)
         self.assertEqual(exprSeq.value, list(range(10)))
 
+
 class TestList(unittest.TestCase):
     def test_evaluate(self):
         scope = Scope()
@@ -84,12 +91,15 @@ class TestList(unittest.TestCase):
         self.assertEqual(exprSeq.evaluate(scope), list(range(10)))
         self.assertEqual(exprSeq.value, list(range(10)))
 
+
 class TestFunctionCall(unittest.TestCase):
     def test_evaluate(self):
-        def makeDef (x):
-            def f (scope, *args):
+        def makeDef(x):
+            def f(scope, *args):
                 return x
+
             return f
+
         scope = Scope()
         for x in "fgh":
             scope.assign(x, makeDef(x))
@@ -97,12 +107,14 @@ class TestFunctionCall(unittest.TestCase):
             funcCall = FunctionCall(('ID', x), [])
             self.assertEqual(funcCall.evaluate(scope), x)
 
+
 class TestSet(unittest.TestCase):
     def test_evaluate(self):
         scope = Scope()
         mySet = Set(('ID', 'x'), MockEvaluate(lambda x: 10, 10))
         mySet.evaluate(scope)
         self.assertEqual(scope.get('x'), 10)
+
 
 class TestVarRef(unittest.TestCase):
     def test_evaluate(self):
@@ -113,7 +125,6 @@ class TestVarRef(unittest.TestCase):
         for x in "abcd":
             r = VarRef(x)
             self.assertEqual(r.evaluate(scope), x)
-
 
 
 if __name__ == '__main__':

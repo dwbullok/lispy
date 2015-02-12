@@ -1,6 +1,7 @@
 __author__ = 'Dan Bullok and Ben Lambeth'
 
 import pprint
+
 P = pprint.PrettyPrinter(indent=4)
 
 tokens = (
@@ -17,17 +18,19 @@ tokens = (
     'LINE_COMMENT'
 )
 
-
 r_id_initial = ''
 r_id_subsequent = '[a-zA-Z_!$%^*/:<=>?~^]'
+
 
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += t.value.count("\n")
 
+
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
+
 
 t_ignore = " \t"
 
@@ -42,7 +45,7 @@ def t_STRING(t):
 
 def t_BOOL(t):
     r'\#[tf]'
-    t.value = ('BOOL', (t.value=='#t'))
+    t.value = ('BOOL', (t.value == '#t'))
     return t
 
 
@@ -57,8 +60,10 @@ def t_INT(t):
     t.value = ('INT', int(t.value))
     return t
 
+
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
+
 
 def t_ID(t):
     r'[-+]|([a-zA-Z_!$%*/:<=>?~^][a-zA-Z_!$%^*/:<=>?~0-9.+\-^]*)'
@@ -72,9 +77,9 @@ def t_ID(t):
         t.value = ('ID', t.value)
     return t
 
+
 t_SQUOTE = r"'"
 t_LINE_COMMENT = r';[^\n]'
-
 
 from ply import lex, yacc
 
@@ -90,6 +95,7 @@ def p_expr(p):
     '''
     p[0] = p[1]
 
+
 def p_func_call(p):
     '''func_call : LPAREN ID exprseq RPAREN
     '''
@@ -100,10 +106,10 @@ def p_ids(p):
     '''ids : ID
            | ID ids
     '''
-    if len(p)==2:
-        p[0] =[ p[1] ]
+    if len(p) == 2:
+        p[0] = [p[1]]
     else:
-        p[0] = [ p[1] ] + p[2]
+        p[0] = [p[1]] + p[2]
 
 
 def p_atom(p):
@@ -115,16 +121,18 @@ def p_atom(p):
     '''
     p[0] = p[1]
 
+
 def p_exprseq(p):
     '''exprseq : expr
                | expr exprseq
     '''
-    if len(p)==2:
+    if len(p) == 2:
         p[0] = ('EXPRSEQ', [p[1]])
     else:
         p[0] = ('EXPRSEQ', [p[1]] + p[2][1])
 
-def p_list (p):
+
+def p_list(p):
     '''list : LPAREN exprseq RPAREN
             | LPAREN RPAREN
     '''
@@ -139,22 +147,19 @@ def p_defun(p):
     '''
     p[0] = ('DEFUN', {'name': p[3], 'args': p[5], 'body': p[7]})
 
+
 def p_set(p):
     '''set : LPAREN SET ID expr RPAREN
     '''
     p[0] = ('SET', {'name': p[3], 'value': p[4]})
 
 
-
 parser = yacc.yacc(debug=True)
-
-
-
 
 test = """( ( + 1 2)
             ( + 1 2) )"""
 
-#test = """(1 3 4)"""
+# test = """(1 3 4)"""
 
 test = """((defun f (x) (+ x 2))
           (f 8))"""
@@ -180,13 +185,13 @@ test = """(
 
 from scope import make_datum, GlobalScope, global_builtins
 import logging
+
 log = logging.getLogger()
 
-tree = parser.parse(test,debug=log)
+tree = parser.parse(test, debug=log)
 P.pprint(tree)
 code = make_datum(tree)
 global_scope = GlobalScope(global_builtins)
-
 
 print(code)
 print(code.evaluate(global_scope))
