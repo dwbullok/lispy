@@ -1,7 +1,10 @@
 .idea
 lispy.iml
-parser/parser.iml
-parser/__pycache__
-parser/parser.out
-parser/parsetab.py
-test/__pycache__
+lispy/lisp.iml
+lispy/__pycache__
+**/parser.out
+**/parsetab.py
+lispy/parsetab.py
+lispy/__pycache__/*.pyc
+**/*.pyc
+lispy.egg-info
