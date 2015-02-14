@@ -8,3 +8,4 @@ lispy/parsetab.py
 lispy/__pycache__/*.pyc
 **/*.pyc
 lispy.egg-info
+doc/build

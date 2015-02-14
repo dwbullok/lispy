@@ -1,5 +1,7 @@
 __author__ = 'Dan Bullok and Ben Lambeth'
-
+'''
+Elements common to the parser and the interpreter.
+'''
 from collections import namedtuple
 
 '''

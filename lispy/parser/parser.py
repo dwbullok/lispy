@@ -28,7 +28,7 @@ class LineTracker(object):
         character offset where the newline occurs.
 
         :param char_offset: the character offset (within the unit) of the
-        newline.
+                            newline.
         :type char_offset: int
         """
         self._last_line_offset = char_offset
@@ -43,8 +43,9 @@ class LineTracker(object):
 
         :param char_offset: the character offset (within the unit) of a token
         :type char_offset: int
+
         :return: A TokenPos that indicates the position within the unit of
-        the given character offset.
+                 the given character offset.
         :rtype: TokenPos
         """
 
