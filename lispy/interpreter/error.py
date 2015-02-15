@@ -9,9 +9,11 @@ class LispyError(LispyException):
 
     def __init__(self, pos, message):
         '''
-        :param pos: the position in the code where the error occurred.  Use
-        None for an unknown or location outside the source code.
+        :param pos: the position in the source code where the error occurred.
+               Use `None` location that is unknown or outside the source code.
         :type pos: TokenPos or None
+        :param message: the error message
+        :type message: str
         '''
         self._pos = pos
         self._message = message
@@ -19,6 +21,8 @@ class LispyError(LispyException):
 
     @property
     def pos(self):
+        '''h
+        '''
         return self._pos
 
     @property
@@ -40,6 +44,9 @@ class VarNameNotFoundError(LispyError):
     '''
 
     def __init__(self, pos, var_name):
+        '''
+
+        '''
         super().__init__(pos, 'Variable name "%s" not found' % var_name)
 
 

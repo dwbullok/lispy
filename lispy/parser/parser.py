@@ -56,7 +56,16 @@ class LineTracker(object):
 
 
 class LispyParser(object):
+    '''
+    Parser for LisPy code.
+    '''
     def __init__(self, lex_kwargs=None, yacc_kwargs=None):
+        '''
+        :param lex_kwargs: kwargs to pass to lex
+        :type lex_kwargs: dict
+        :param yacc_kwargs: kwargs to pass to yacc
+        :type yacc_kwargs: dict
+        '''
         lex_kwargs = lex_kwargs if lex_kwargs else dict()
         yacc_kwargs = yacc_kwargs if yacc_kwargs else dict()
         self._lexer = lex.lex(module=self, **lex_kwargs)
@@ -64,6 +73,17 @@ class LispyParser(object):
         self._files = dict()
 
     def parse(self, unit_name, input_text):
+        '''
+        Parse input_text.
+
+        :param unit_name: the name of the translation unit (used to record
+                          position information).
+        :type unit_name: str
+        :param input_text: the source text to parse
+        :type input_text: str
+        :return: abstract syntax tree
+        :rtchype: Syn
+        '''
         self._tracker = LineTracker(unit_name)
         result = self._parser.parse(input_text, lexer=self._lexer)
         self._files[unit_name] = result
@@ -72,6 +92,7 @@ class LispyParser(object):
     def get_syn(self, tok, s_type, s_value):
         '''
         Create a Syn from a token.  Determines the current TokenPos.
+
         :param tok: token
         :type tok: LexToken
         :param s_type: type of the token

@@ -48,6 +48,13 @@ def divBuiltin(parent_scope, *args):
 
 
 def compareBuiltin(op):
+    '''
+    Create a comparison operator function.
+
+    :param op: operator function to use for comparison
+    :type op: (any, any) -> bool
+    :return: comparison function suitable for use as a builtin
+    '''
     def f(parent_scope, *args):
         last_value = args[0].evaluate(parent_scope)
         for a in args[1:]:
@@ -57,7 +64,6 @@ def compareBuiltin(op):
                 continue
             return False
         return True
-
     return f
 
 
@@ -79,7 +85,7 @@ def whileBuiltin(parent_scope, cond, body):
 def beginBuiltin(parent_scope, body):
     return body.evaluate(parent_scope)
 
-
+#: Default set of builtin functions (function name -> function)
 global_builtins = {
     '+': plusBuiltin,
     '-': minusBuiltin,
@@ -91,7 +97,6 @@ global_builtins = {
     '>': gtBuiltin,
     '<=': lteBuiltin,
     '>=': gteBuiltin,
-    'if': ifBuiltin
+    'if': ifBuiltin,
+    'begin': beginBuiltin
 }
-
-
