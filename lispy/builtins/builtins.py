@@ -89,6 +89,13 @@ def beginBuiltin(parent_scope, *body):
         last_value = a.evaluate(parent_scope)
     return last_value
 
+def printBuiltin(parent_scope, *args):
+    last_value = None
+    for a in args:
+        last_value = a.evaluate(parent_scope)
+        print(last_value)
+    return last_value
+
 def loadBuiltinMaker(interpreter):
     def loadBuiltin(parent_scope, *unit_names):
         assert (len(unit_names)>=1)
@@ -114,7 +121,9 @@ global_builtins = {
     'or': orBuiltin,
     'and': andBuiltin,
     'if': ifBuiltin,
-    'begin': beginBuiltin
+    'begin': beginBuiltin,
+    'while': whileBuiltin,
+    'print': printBuiltin
 }
 
 interpreter_builtins = {
