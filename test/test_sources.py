@@ -31,9 +31,12 @@ TEST_RESULT = (
     4)
 )
 
-from lispy.interpreter import Interpreter
-from lispy.interpreter.loader import DictLoader
+FILE_RESULT = (('test1.lisp', [3, 3]),)
 
+
+from lispy.interpreter import Interpreter
+from lispy.interpreter.loader import DictLoader, FileSysLoader
+import os
 
 def check_result(source, expected_result):
     loader_dict = {}
@@ -47,10 +50,24 @@ def check_result(source, expected_result):
     assert test_result == expected_result
 
 
+def file_check_result(file_name, expected_result):
+    cwd = os.getcwd()
+    loader = FileSysLoader([os.path.join(cwd,'source_file_tests')])
+    interp = Interpreter(loader)
+    test_result = interp.run_module(file_name)
+    assert test_result == expected_result
+
+
 # Test all the instances
-def test_all():
+def test_all_dict():
     for (source, result) in TEST_RESULT:
         yield (check_result, source, result)
+
+# Test all the instances on the file system
+def test_all_files():
+    for (file_name, result) in FILE_RESULT:
+        yield (file_check_result, file_name, result)
+
 
 
 # TODO:  Add test cases that check for code that should fail.
