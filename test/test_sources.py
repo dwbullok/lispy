@@ -18,7 +18,11 @@ TEST_RESULT = (
           (if (= 2 (f 3)) 6.7 "bart")
           (set x 2)
         )""",
-     [None, ['homer', 14.0], 'bart', 2])
+     [None, ['homer', 14.0], 'bart', 2]),
+    ("""(begin (set x 2) (if (= x 2) "yay" "nay"))""", "yay"),
+    ("""(begin (defun fibb (n)
+           (if (or (= n 0) (= n 1)) 1 (+ (fibb (- n 1)) (fibb (- n 2)))))
+        (fibb 5))""", 8)
 )
 
 from lispy.interpreter import Interpreter

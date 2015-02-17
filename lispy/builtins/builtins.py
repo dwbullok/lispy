@@ -1,12 +1,11 @@
 __author__ = 'Dan Bullok and Ben Lambeth'
 
-
 # builtin functions
 
 # TODO: the user should be able to specify the set of builtins to load into
 # an interpreter.
 
-import operator
+import operator, functools
 
 
 def ifBuiltin(parent_scope, condition, true_expr, false_expr):
@@ -27,12 +26,12 @@ def plusBuiltin(parent_scope, *args):
 
 def minusBuiltin(parent_scope, *args):
     x = expandArgs(parent_scope, args)
-    return reduce(operator.sub, x[1:], x[0])
+    return functools.reduce(operator.sub, x[1:], x[0])
 
 
 def timesBuiltin(parent_scope, *args):
     x = expandArgs(parent_scope, args)
-    return reduce(operator.mul, x, 1)
+    return functools.reduce(operator.mul, x, 1)
 
 
 def divBuiltin(parent_scope, *args):
@@ -44,7 +43,7 @@ def divBuiltin(parent_scope, *args):
         else:
             return a // b
 
-    return reduce(sensitiveDiv, x[1:], x[0])
+    return functools.reduce(sensitiveDiv, x[1:], x[0])
 
 
 def compareBuiltin(op):
@@ -67,6 +66,8 @@ ltBuiltin = compareBuiltin(lambda x, y: x < y)
 gtBuiltin = compareBuiltin(lambda x, y: x > y)
 gteBuiltin = compareBuiltin(lambda x, y: x >= y)
 lteBuiltin = compareBuiltin(lambda x, y: x <= y)
+orBuiltin = compareBuiltin(lambda x, y: x or y)
+andBuiltin = compareBuiltin(lambda x, y: x and y)
 
 
 def whileBuiltin(parent_scope, cond, body):
@@ -76,8 +77,11 @@ def whileBuiltin(parent_scope, cond, body):
     return last_value
 
 
-def beginBuiltin(parent_scope, body):
-    return body.evaluate(parent_scope)
+def beginBuiltin(parent_scope, *body):
+    last_value = None
+    for a in body:
+        last_value = a.evaluate(parent_scope)
+    return last_value
 
 
 global_builtins = {
@@ -91,7 +95,10 @@ global_builtins = {
     '>': gtBuiltin,
     '<=': lteBuiltin,
     '>=': gteBuiltin,
-    'if': ifBuiltin
+    'or': orBuiltin,
+    'and': andBuiltin,
+    'if': ifBuiltin,
+    'begin': beginBuiltin
 }
 
 
