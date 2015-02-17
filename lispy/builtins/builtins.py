@@ -76,10 +76,11 @@ orBuiltin = compareBuiltin(lambda x, y: x or y)
 andBuiltin = compareBuiltin(lambda x, y: x and y)
 
 
-def whileBuiltin(parent_scope, cond, body):
+def whileBuiltin(parent_scope, cond, *body):
     last_value = None
     while (cond.evaluate(parent_scope)):
-        last_value = body.evaluate(parent_scope)
+        for a in body:
+            last_value = a.evaluate(parent_scope)
     return last_value
 
 
