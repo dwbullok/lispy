@@ -43,21 +43,31 @@ __DEFAULT_BUILTINS__ = 'builtins'
 
 from ..parser import LispyParser
 from .scope import GlobalScope
-from ..builtins import global_builtins
+from ..builtins import global_builtins, interpreter_builtins
 
 
 class Interpreter(object):
     def __init__(self, loader, debug_level=0, builtins=None):
         self._loader = loader
         self._parser = LispyParser()
+        self._global_scope = None
 
     def run_module(self, unit_name):
         source_text = self._loader.load_unit(unit_name)
         ast = self._parser.parse(unit_name, source_text)
-        global_scope = GlobalScope(global_builtins)
+        self._global_scope = GlobalScope(global_builtins,
+                                         interpreter_builtins,
+                                         self)
         code = make_datum(ast)
-        result = code.evaluate(global_scope)
-        print(result)
+        result = code.evaluate(self._global_scope)
+        # print(result)
+        return result
+
+    def evaluate_unit(self, unit_name):
+        source_text = self._loader.load_unit(unit_name)
+        ast = self._parser.parse(unit_name, source_text)
+        code = make_datum(ast)
+        result = code.evaluate(self._global_scope)
         return result
 
 

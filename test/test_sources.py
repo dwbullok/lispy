@@ -22,7 +22,13 @@ TEST_RESULT = (
     ("""(begin (set x 2) (if (= x 2) "yay" "nay"))""", "yay"),
     ("""(begin (defun fibb (n)
            (if (or (= n 0) (= n 1)) 1 (+ (fibb (- n 1)) (fibb (- n 2)))))
-        (fibb 5))""", 8)
+        (fibb 5))""", 8),
+    ({'main': """(begin
+                  (load "external_thinggie")
+                  (ext 3)
+                 )""",
+     'external_thinggie': "(defun ext (x) (+ x 1))"},
+    4)
 )
 
 from lispy.interpreter import Interpreter
@@ -30,7 +36,12 @@ from lispy.interpreter.loader import DictLoader
 
 
 def check_result(source, expected_result):
-    loader = DictLoader({'main': source})
+    loader_dict = {}
+    if isinstance(source, str):
+        loader_dict = {'main': source}
+    elif isinstance(source, dict):
+        loader_dict = source
+    loader = DictLoader(loader_dict)
     interp = Interpreter(loader)
     test_result = interp.run_module('main')
     assert test_result == expected_result
@@ -40,6 +51,7 @@ def check_result(source, expected_result):
 def test_all():
     for (source, result) in TEST_RESULT:
         yield (check_result, source, result)
+
 
 # TODO:  Add test cases that check for code that should fail.
 

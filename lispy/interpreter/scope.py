@@ -124,7 +124,7 @@ class GlobalScope(Scope):
     '''A top level global Scope
     '''
 
-    def __init__(self, builtins):
+    def __init__(self, builtins, interpreter_builtins, interpreter):
         '''
         :param builtins:
         :type builtins: dict[str,function]
@@ -136,6 +136,10 @@ class GlobalScope(Scope):
         for id, f in builtins.items():
             # create an ID to use for binding.
             self.create_local(Syn('ID', id, __BUILTIN_POS__), f)
+        for id, make_func in interpreter_builtins.items():
+            # create an ID to use for binding.
+            bulitin_func = make_func(interpreter)
+            self.create_local(Syn('ID', id, __BUILTIN_POS__), bulitin_func)
 
 
 class Datum(object):

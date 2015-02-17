@@ -89,6 +89,16 @@ def beginBuiltin(parent_scope, *body):
         last_value = a.evaluate(parent_scope)
     return last_value
 
+def loadBuiltinMaker(interpreter):
+    def loadBuiltin(parent_scope, *unit_names):
+        assert (len(unit_names)>=1)
+        result=None
+        for unit in unit_names:
+            result = interpreter.evaluate_unit(unit)
+        return result
+    return loadBuiltin
+
+
 #: Default set of builtin functions (function name -> function)
 global_builtins = {
     '+': plusBuiltin,
@@ -105,4 +115,8 @@ global_builtins = {
     'and': andBuiltin,
     'if': ifBuiltin,
     'begin': beginBuiltin
+}
+
+interpreter_builtins = {
+    'load': loadBuiltinMaker
 }

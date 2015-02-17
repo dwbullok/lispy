@@ -43,10 +43,18 @@ class DictLoader(Loader):
         self._units = units
 
     def load_unit(self, unit_name, pos=None):
+        '''
+        :param unit_name: the name of the unit to load
+        :type unit_name: str or StaticDatum of type str
+        '''
+        # TODO: ensure that unit_name.value is actually a string.
+        n = unit_name if isinstance(unit_name,str) else unit_name.value
         try:
-            return self._units.get(unit_name)
+            s = self._units.get(n)
+            return s
         except KeyError as e:
-            raise UnitNotFoundError(pos, unit_name)
+            p = pos if not hasattr(unit_name, 'value') else unit_name.pos
+            raise UnitNotFoundError(p, n)
 
 
 class FileSysLoader(Loader):
