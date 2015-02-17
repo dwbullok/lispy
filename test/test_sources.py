@@ -59,18 +59,28 @@ def file_check_result(file_name, expected_result):
 
 
 # Test all the instances
-def test_all_dict():
+def nottest_all_dict():
     for (source, result) in TEST_RESULT:
         yield (check_result, source, result)
 
 # Test all the instances on the file system
-def test_all_files():
+def nottest_all_files():
     for (file_name, result) in FILE_RESULT:
         yield (file_check_result, file_name, result)
 
 
+from pprint import PrettyPrinter
 
+P = PrettyPrinter(indent=4)
+
+from lispy.parser.tokenizer import Tokenizer
 # TODO:  Add test cases that check for code that should fail.
+def test_print_tokens():
+    tokenizer = Tokenizer()
+    for (source, result) in TEST_RESULT:
+        if isinstance(source, str):
+            print(('-'*80)+'\n'+source+'\n')
+            P.pprint(tokenizer.tokenize('main', source))
 
-
+test_print_tokens()
 

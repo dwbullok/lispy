@@ -1,6 +1,8 @@
-__author__ = 'Dan Bullok and Ben Lambeth'
+'''
+    Builtin functions for the interpreter.
+'''
 
-# builtin functions
+__author__ = 'Dan Bullok and Ben Lambeth'
 
 # TODO: the user should be able to specify the set of builtins to load into
 # an interpreter.
@@ -53,6 +55,7 @@ def compareBuiltin(op):
     :param op: operator function to use for comparison
     :type op: (any, any) -> bool
     :return: comparison function suitable for use as a builtin
+
     '''
     def f(parent_scope, *args):
         last_value = args[0].evaluate(parent_scope)
@@ -99,7 +102,8 @@ def loadBuiltinMaker(interpreter):
     return loadBuiltin
 
 
-#: Default set of builtin functions (function name -> function)
+#: Default set of builtin functions
+
 global_builtins = {
     '+': plusBuiltin,
     '-': minusBuiltin,
@@ -117,6 +121,9 @@ global_builtins = {
     'begin': beginBuiltin
 }
 
-interpreter_builtins = {
+
+#: Default set of interpreter builtins
+
+interpreter_builtins =  {
     'load': loadBuiltinMaker
 }

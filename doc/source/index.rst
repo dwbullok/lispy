@@ -8,20 +8,21 @@ Contents:
 
 :mod:`lispy.common` Package
 ---------------------------
-
 .. module:: lispy.common
 .. autoclass:: TokenPos
 .. autoclass:: Syn
 .. autoclass:: LispyException
+   :members:
 
 
 :mod:`lispy.parser` Package
 ---------------------------
 
 .. module:: lispy.parser
-.. autoclass:: LineTracker
-.. autoclass:: LispyParser
-   :members: __init__, parser, get_syn
+.. autoclass:: Tokenizer
+   :members: __init__, tokenize
+.. autoclass:: Parser
+   :members:
 
 
 :mod:`lispy.interpreter` Package
@@ -49,7 +50,9 @@ Contents:
 -----------------------------
 
 .. automodule:: lispy.builtins
-.. autodata:: global_builtins
+.. autoattribute:: lispy.builtins.global_builtins
+   :annotation:
+.. autodata:: lispy.builtins.interpreter_builtins
    :annotation:
 
 Indices and tables

@@ -1,41 +1,6 @@
-from ..common import LispyException, TokenPos
+from ..common import LispyException, LispyError, TokenPos
 
 __author__ = 'Dan Bullok and Ben Lambeth'
-
-
-class LispyError(LispyException):
-    '''Base class for errors that should be reported to the user.
-    '''
-
-    def __init__(self, pos, message):
-        '''
-        :param pos: the position in the source code where the error occurred.
-               Use `None` location that is unknown or outside the source code.
-        :type pos: TokenPos or None
-        :param message: the error message
-        :type message: str
-        '''
-        self._pos = pos
-        self._message = message
-
-
-    @property
-    def pos(self):
-        '''h
-        '''
-        return self._pos
-
-    @property
-    def message(self):
-        return self._message
-
-    def __str__(self):
-        if self.pos is None:
-            return 'Error:\n%s' % self.message
-        return 'Error at %s:%d,%d\n%s' % (self.pos.unit_name,
-                                          self.pos.line,
-                                          self.pos.column,
-                                          self.message)
 
 
 class VarNameNotFoundError(LispyError):
@@ -69,10 +34,8 @@ class UnitNotFoundError(LispyError):
     '''
     Unable to find a source code unit.
     '''
-
     def __init__(self, pos, unit_name):
         super().__init__(pos, 'Unit "%s" not found.' % unit_name)
         self._unit_name = unit_name
-
 
 

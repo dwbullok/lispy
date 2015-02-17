@@ -41,7 +41,7 @@ def make_datum(t):
 
 __DEFAULT_BUILTINS__ = 'builtins'
 
-from ..parser import LispyParser
+from ..parser import Parser, Tokenizer
 from .scope import GlobalScope
 from ..builtins import global_builtins, interpreter_builtins
 
@@ -49,7 +49,8 @@ from ..builtins import global_builtins, interpreter_builtins
 class Interpreter(object):
     def __init__(self, loader, debug_level=0, builtins=None):
         self._loader = loader
-        self._parser = LispyParser()
+        self._tokenizer = Tokenizer()
+        self._parser = Parser()
         self._global_scope = None
 
     def run_module(self, unit_name):
