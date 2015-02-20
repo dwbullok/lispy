@@ -2,8 +2,8 @@ import unittest
 from collections import namedtuple
 
 from lispy.interpreter.scope import Scope, ArgExpr
-from lispy.interpreter.datatypes import FunctionDef, ExprSeq, List, \
-    FunctionCall, Set, VarRef
+from lispy.interpreter.datatypes import ExprSeq, List, \
+    FunctionCall, Symbol
 from lispy.common import Syn, TokenPos
 from lispy.interpreter.error import VarNameNotFoundError
 
@@ -74,23 +74,23 @@ class TestScope(unittest.TestCase):
         argExpr = ArgExpr(self.isolatedScope, Expression("I work"))
         self.isolatedScope.assign(ID("argE"), argExpr)
         self.assertEqual(self.isolatedScope.get(ID("argE")), "I work")
-
-
-class TestFunctionDef(unittest.TestCase):
-    def test_evaluate(self):
-        scope = Scope(dummy_pos)
-        f = FunctionDef(dummy_pos, ID('f'), [], None)
-        f.evaluate(scope)
-        self.assertEqual(scope.get(ID('f')), f)
-
-    def test_call(self):
-        scope = Scope(dummy_pos)
-        f = FunctionDef(dummy_pos, ID('f'), [], Expression("I work"))
-        self.assertEqual(f(scope), "I work")
-
-        body = MockEvaluate(lambda scope: scope.get(ID('x')), 1)
-        g = FunctionDef(dummy_pos, ID('g'), [ID('x')], body)
-        self.assertEqual(g(scope, MockEvaluate(lambda x: 5, 5)), 5)
+#
+#
+# class TestFunctionDef(unittest.TestCase):
+#     def test_evaluate(self):
+#         scope = Scope(dummy_pos)
+#         f = FunctionDef(dummy_pos, ID('f'), [], None)
+#         f.evaluate(scope)
+#         self.assertEqual(scope.get(ID('f')), f)
+#
+#     def test_call(self):
+#         scope = Scope(dummy_pos)
+#         f = FunctionDef(dummy_pos, ID('f'), [], Expression("I work"))
+#         self.assertEqual(f(scope), "I work")
+#
+#         body = MockEvaluate(lambda scope: scope.get(ID('x')), 1)
+#         g = FunctionDef(dummy_pos, ID('g'), [ID('x')], body)
+#         self.assertEqual(g(scope, MockEvaluate(lambda x: 5, 5)), 5)
 
 
 class TestExprSeq(unittest.TestCase):
@@ -130,24 +130,24 @@ class TestFunctionCall(unittest.TestCase):
             funcCall = FunctionCall(dummy_pos, ID(x), [])
             self.assertEqual(funcCall.evaluate(scope), x)
 
-
-class TestSet(unittest.TestCase):
-    def test_evaluate(self):
-        scope = Scope(dummy_pos)
-        mySet = Set(dummy_pos, ID('x'), MockEvaluate(lambda x: 10,
-                                                     10))
-        mySet.evaluate(scope)
-        self.assertEqual(scope.get(ID('x')), 10)
-
-
-class TestVarRef(unittest.TestCase):
+#
+# class TestSet(unittest.TestCase):
+#     def test_evaluate(self):
+#         scope = Scope(dummy_pos)
+#         mySet = Set(dummy_pos, ID('x'), MockEvaluate(lambda x: 10,
+#                                                      10))
+#         mySet.evaluate(scope)
+#         self.assertEqual(scope.get(ID('x')), 10)
+#
+#
+class TestSymbol(unittest.TestCase):
     def test_evaluate(self):
         scope = Scope(dummy_pos)
         for x in "abcd":
             scope.assign(ID(x), x)
 
         for x in "abcd":
-            r = VarRef(dummy_pos, ID(x))
+            r = Symbol(dummy_pos, ID(x))
             self.assertEqual(r.evaluate(scope), x)
 
 

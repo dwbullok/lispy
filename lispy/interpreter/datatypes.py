@@ -1,54 +1,79 @@
 __author__ = 'Dan Bullok and Ben Lambeth'
 
-from .scope import Scope, ArgExpr, Datum
-
+from ..common import ArgExpr
+from ..common import Syn
 
 '''
 Data types.  These are built from the AST that the parser outputs.
 '''
 
 
-class FunctionDef(Datum):
-    '''
-    A function definition.
-    '''
-
-    def __init__(self, pos, name, args, body):
+class Datum(object):
+    def __init__(self, pos):
         '''
-        :param name: the name to bind this function definition
-        :type name: name.value must be a str
-        :param args: the arguments this function takes
-        :type args: a list of identifier tokens
-        :param body: the body of the function
-        :type body: ExprSeq
+        :param pos: the source position where this Datum occurs
+        :type pos: LexicalPos
         '''
-        super().__init__(pos)
+        self._pos = pos
 
-        self._name = name
-        self._args = [a for a in args]
-        self._body = body
+    def evaluate(self, parent_scope):
+        '''
+        Evaluate this Datum in the given parent scope.
 
-    def __call__(self, parent_scope, *arg_vals):
-        assert (len(self._args) == len(arg_vals))
-        scope = Scope(self.pos, parent_scope)
-        for (id, val) in zip(self._args, arg_vals):
-            # we store the values of the args - they might not actually be
-            # computed.  This allows lazy evaluation of function args
-            scope.create_local(id, ArgExpr(parent_scope, val))
-        return self._body.evaluate(scope)
-        # last_value = None
-        # for item in self._body:
-        # last_value = item.evaluate(scope)
-        # return last_value
+        :param parent_scope: the scope in which this Datum is evaluated
+        :type parent_scope: Scope
+        :return: The result of the evaluation.
+        '''
+        pass
 
     @property
     def value(self):
-        return 'FunctionDef %s (%s) at %s' % (self._name,
-                                              [a.value for a in self._args],
-                                              str(self.pos) )
+        '''
+        :return the value of this Datum (for literals, this is the value of
+        the literal (no evaluation takes place).
+        '''
+        return self
 
-    def evaluate(self, parent_scope):
-        parent_scope.assign(self._name, self)
+    @property
+    def pos(self):
+        return self._pos
+
+    def __str__(self):
+        return str(self.value)
+
+
+VALID_DEFNS = (Datum, int, float, str, bool, complex, ArgExpr)
+
+
+def is_evaluatable(obj):
+    '''
+    Determine whether obj can be evaluated.
+
+    :param obj: the object to check
+    :param obj: any
+    :return: True if obj has an evaluate method.  False otherwise
+    :rtype: bool
+    '''
+    return hasattr(obj, 'evaluate')
+
+
+def is_valid_defn(obj):
+    return (type(obj) in VALID_DEFNS) or is_evaluatable(obj) or callable(obj)
+
+
+
+class ArgList(object):
+    def __init__(self, args):
+        self._args = []
+        #for a in args:
+
+
+#default_arg_transform = ArgExpr
+#iquote_arg_transform = lambda s: SQUOTE(s)
+
+''' (defun %defun %args %body
+    )
+'''
 
 
 class FunctionCall(Datum):
@@ -71,7 +96,7 @@ class ExprSeq(Datum):
         self._items = items
 
     def evaluate(self, parent_scope):
-        scope = Scope(self.pos, parent_scope)
+        scope = parent_scope.make_child_scope(self.pos)
         last_value = None
         for e in self._items:
             last_value = e.evaluate(scope)
@@ -82,28 +107,29 @@ class ExprSeq(Datum):
         return [i.value for i in self._items]
 
 
-class List(ExprSeq):
-    def evaluate(self, parent_scope):
-        return [i.evaluate(parent_scope) for i in self._items]
-
-
-class Set(Datum):
-    def __init__(self, pos, name, value):
+class Quote(Datum):
+    def __init__(self, pos, value):
         super().__init__(pos)
-        self._name = name
         self._value = value
 
     def evaluate(self, parent_scope):
-        v = self._value.evaluate(parent_scope)
-        parent_scope.assign(self._name, v)
-        return v
+        return self._value
+
+class List(ExprSeq):
+
+    def evaluate(self, parent_scope):
+        name = self._items[0].value
+        func_def = parent_scope.get(name)
+        if func_def is None:
+            raise Exception("Undefined function '%s'" % str(name))
+        return func_def(parent_scope, *[i.evaluate(parent_scope) for i in
+                                      self._items])
 
 
 class StaticDatum(Datum):
     '''
     Datum that represents a static (constant) value.
     '''
-
     def __init__(self, pos, value):
         '''
         :param value: the value of this StaticDatum
@@ -119,11 +145,7 @@ class StaticDatum(Datum):
     def value(self):
         return self._value
 
-
-from ..common import Syn
-
-
-class VarRef(Datum):
+class Symbol(Datum):
     def __init__(self, pos, name):
         '''
         :param pos: position of the variable reference within the source
@@ -137,3 +159,5 @@ class VarRef(Datum):
 
     def evaluate(self, parent_scope):
         return parent_scope.get(self._name)
+
+

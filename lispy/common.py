@@ -38,8 +38,8 @@ AstNode = namedtuple('AstNode', 'type value pos')
 :type pos: TokenPos
 '''
 
-
-
+ArgExpr = namedtuple('ArgExpr', 'parent_scope expr')
+ArgExpr.evaluate = lambda s: s.expr.evaluate(s.parent_scope)
 
 
 class LispyException(Exception):

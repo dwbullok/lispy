@@ -1,24 +1,34 @@
 __author__ = 'Dan Bullok and Ben Lambeth'
 
 TEST_RESULT = (
-    ("( ( + 1 2) ( + 2 1) )",
-     [3, 3]),
-    ("(1 3 4)", [1, 3, 4]),
-    ("""((defun f (x) (+ x 2))
+    ( "(begin  1 2)",
+      2),
+    ("(set (quote s) 2)",
+    2),
+    ("""(begin
+         (set (quote s) 2)
+         s)""", 2),
+    ("( + 1 2)",
+     3),
+    ("(begin (set x 1) x)",
+     1),
+    ("(list 1 3 4)", [1, 3, 4]),
+    ("""(begin (defun f (x) (+ x 2))
         (f 8))""",
-     [None, 10]),
-    ("( #t #f)",
+     10),
+    ("(list #t #f)",
      [True, False]),
-    ("""(
+    ("""(begin
           (defun f (x)
             (defun g (y) (+ x y 4.0))
             (+ (g 5) x 1)
           )
-          ("homer" (f 2))
-          (if (= 2 (f 3)) 6.7 "bart")
-          (set x 2)
+            (list
+              (f 2)
+              (f 3)
+            )
         )""",
-     [None, ['homer', 14.0], 'bart', 2]),
+     [14.0, 16.0]),
     ("""(begin (set x 2) (if (= x 2) "yay" "nay"))""", "yay"),
     ("""(begin (defun fibb (n)
            (if (or (= n 0) (= n 1)) 1 (+ (fibb (- n 1)) (fibb (- n 2)))))
@@ -59,7 +69,7 @@ def file_check_result(file_name, expected_result):
 
 
 # Test all the instances
-def nottest_all_dict():
+def test_all_dict():
     for (source, result) in TEST_RESULT:
         yield (check_result, source, result)
 
@@ -73,14 +83,14 @@ from pprint import PrettyPrinter
 
 P = PrettyPrinter(indent=4)
 
-from lispy.parser.tokenizer import Tokenizer
-# TODO:  Add test cases that check for code that should fail.
-def test_print_tokens():
-    tokenizer = Tokenizer()
-    for (source, result) in TEST_RESULT:
-        if isinstance(source, str):
-            print(('-'*80)+'\n'+source+'\n')
-            P.pprint(tokenizer.tokenize('main', source))
-
-test_print_tokens()
-
+# from lispy.parser.tokenizer import Tokenizer
+# # TODO:  Add test cases that check for code that should fail.
+# def test_print_tokens():
+#     tokenizer = Tokenizer()
+#     for (source, result) in TEST_RESULT:
+#         if isinstance(source, str):
+#             print(('-'*80)+'\n'+source+'\n')
+#             P.pprint(tokenizer.tokenize('main', source))
+#
+# test_print_tokens()
+#

@@ -29,7 +29,7 @@ class TokenStack(object):
         :return: True if the stack is empty, False otherwise
         :rtype: bool
         '''
-        return len(self._stack)
+        return len(self._stack) == 0
 
     @property
     def top(self):
@@ -56,7 +56,6 @@ class TokenStack(object):
         :rtype: list[Syn or AstNode], None
         '''
         # TODO: watch performance here and track lparen locations if necessary.
-
         if tok.type=='RPAREN':
             # pop until we find the opening LPAREN
             expr = self.pop_until_lparen()
@@ -134,7 +133,9 @@ class Parser(object):
             expr = stack.push(tok)
             if expr is not None:
                 stack.push(self.make_ast_node(expr))
-        return stack.result()
+        #result = []
+
+        return stack.pop_all()
 
     def make_ast_node(self, exprs):
         '''
@@ -146,6 +147,7 @@ class Parser(object):
         :return: an ast node representing the expression list
         :rtype: AstNode
         '''
+        return AstNode('LIST',exprs,exprs[0].pos)
 
 
     def is_expr(self, item):

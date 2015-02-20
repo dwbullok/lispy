@@ -1,12 +1,12 @@
 from collections import namedtuple
 from .error import VarNameNotFoundError
-from ..common import TokenPos, Syn
+from ..common import TokenPos, Syn, AstNode
 
 __author__ = 'Dan Bullok and Ben Lambeth'
 
-ArgExpr = namedtuple('ArgExpr', 'parent_scope expr')
-ArgExpr.evaluate = lambda s: s.expr.evaluate(s.parent_scope)
+from ..common import ArgExpr
 
+from .datatypes import Symbol, is_valid_defn
 
 class Scope(object):
     '''
@@ -24,6 +24,9 @@ class Scope(object):
         assert (parent is None) or isinstance(parent, Scope)
         self._defns = dict()
         self._parent = parent
+
+    def make_child_scope(self, pos):
+        return Scope(pos, self)
 
     @property
     def parent(self):
@@ -46,18 +49,26 @@ class Scope(object):
         :throws VarNameNotFoundError: if identifier is not found in this
         or any ancestor scope
         '''
-        assert isinstance(id, Syn)
+
+        name = None
+        if isinstance(id, Symbol):
+            id = id._name
+        name = id.value
+        if not isinstance(name, str):
+            raise Exception("FUUUUUUUUUUCCCKKKKK!")
+
+
         defn = None
         if self._parent is not None:
-            if id.value in self._defns:
-                defn = self._defns[id.value]
+            if name in self._defns:
+                defn = self._defns[name]
             else:
                 return self._parent.get(id)
         else:
-            if id.value in self._defns:
-                defn = self._defns[id.value]
+            if name in self._defns:
+                defn = self._defns[name]
             else:
-                raise VarNameNotFoundError(id.pos, id.value)
+                raise VarNameNotFoundError(id.pos, name)
         if isinstance(defn, ArgExpr):
             # handle lazy arg evaluation
             return defn.expr.evaluate(defn.parent_scope)
@@ -140,57 +151,4 @@ class GlobalScope(Scope):
             # create an ID to use for binding.
             bulitin_func = make_func(interpreter)
             self.create_local(Syn('ID', id, __BUILTIN_POS__), bulitin_func)
-
-
-class Datum(object):
-    def __init__(self, pos):
-        '''
-        :param pos: the source position where this Datum occurs
-        :type pos: LexicalPos
-        '''
-        self._pos = pos
-
-    def evaluate(self, parent_scope):
-        '''
-        Evaluate this Datum in the given parent scope.
-
-        :param parent_scope: the scope in which this Datum is evaluated
-        :type parent_scope: Scope
-        :return: The result of the evaluation.
-        '''
-        pass
-
-    @property
-    def value(self):
-        '''
-        :return the value of this Datum (for literals, this is the value of
-        the literal (no evaluation takes place).
-        '''
-        return self
-
-    @property
-    def pos(self):
-        return self._pos
-
-    def __str__(self):
-        return str(self.value)
-
-
-VALID_DEFNS = (Datum, int, float, str, bool, complex, ArgExpr)
-
-
-def is_evaluatable(obj):
-    '''
-    Determine whether obj can be evaluated.
-
-    :param obj: the object to check
-    :param obj: any
-    :return: True if obj has an evaluate method.  False otherwise
-    :rtype: bool
-    '''
-    return hasattr(obj, 'evaluate')
-
-
-def is_valid_defn(obj):
-    return (type(obj) in VALID_DEFNS) or is_evaluatable(obj) or callable(obj)
 

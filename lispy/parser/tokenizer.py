@@ -69,10 +69,16 @@ class Tokenizer(object):
         'PAREN',
         'ID',
         'SQUOTE',
-        'COMMENT'
+        'COMMENT',
+        'KEYWORD'
     )
 
     # begin lexer tokens
+
+    def t_keyword(self, t):
+        r'&[-a-zA-Z_]'
+        t.value = self._make_token(t, 'KEYWORD', t.value)
+        return t
 
     def t_newline(self, t):
         r'\n+'
@@ -127,13 +133,17 @@ class Tokenizer(object):
         return t
 
     def t_SQUOTE(self, t):
+        r"'"
         t.value = self._make_token(t, 'SQUOTE', t.value)
+        return t
+
+    def t_IQUOTE(self, t):
+        r'[!]'
+        t.value = self._make_token(t, 'IQUOTE', t.value)
         return t
 
     def t_COMMENT(self, t):
         r';[^\n]'
         t.value = self._make_token(t, 'COMMENT', t.value)
         return t
-
-
 

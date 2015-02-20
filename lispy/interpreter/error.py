@@ -39,3 +39,13 @@ class UnitNotFoundError(LispyError):
         self._unit_name = unit_name
 
 
+class ArgCountError(LispyError):
+    '''
+    Tried to call a function using the wrong number of arguments
+    '''
+
+
+class LispySyntaxError(LispyError):
+    '''
+    General Syntax Error
+    '''
