@@ -1,28 +1,35 @@
 __author__ = 'Dan Bullok and Ben Lambeth'
 
-import pprint
-
 from ply import lex
+from ply.lex import LexToken
 
-from ..common import TokenPos, Syn
+from codeviking.contracts import Seq, Any, check_sig
 
+from ..common import Syn
 from .linetracker import LineTracker
 
+
 class Tokenizer(object):
-    '''
+    """
     Parser for LisPy code.
-    '''
+    """
+
+    @check_sig
     def __init__(self, lex_kwargs=None):
-        '''
+        """
         :param lex_kwargs: kwargs to pass to lex
         :type lex_kwargs: dict
-        '''
+        """
         lex_kwargs = lex_kwargs if lex_kwargs else dict()
         self._lexer = lex.lex(module=self, **lex_kwargs)
         self._ignore_tokens = {'COMMENT'}
+        self._tracker = None
 
-    def tokenize(self, unit_name, input_text):
-        '''
+    @check_sig
+    def tokenize(self,
+                 unit_name:str,
+                 input_text:str) -> Seq(Syn):
+        """
         Tokenize input_text.
 
         :param unit_name: the name of the translation unit (used to record
@@ -33,7 +40,7 @@ class Tokenizer(object):
         :type input_text: str
         :return: tokens
         :rtype: list[Syn]
-        '''
+        """
         self._tracker = LineTracker(unit_name)
         self._lexer.input(input_text)
         result = []
@@ -45,9 +52,12 @@ class Tokenizer(object):
                 result.append(tok.value)
         return result
 
-
-    def _make_token(self, tok, s_type, s_value):
-        '''
+    @check_sig
+    def _make_token(self,
+                    tok: LexToken,
+                    s_type: str,
+                    s_value: Any) -> Syn:
+        """
         Create a Syn from a token.  Determines the current TokenPos.
 
         :param tok: token
@@ -58,8 +68,10 @@ class Tokenizer(object):
         :type s_value: varies
         :return: A Syn containing the token and its position
         :rtype: Syn
-        '''
-        return Syn(s_type, s_value, self._tracker.get_pos(self._lexer.lexpos))
+        """
+        return Syn(s_type,
+                   s_value,
+                   self._tracker.get_pos(tok.lexpos))
 
     tokens = (
         'STRING',
@@ -76,12 +88,12 @@ class Tokenizer(object):
     # begin lexer tokens
 
     def t_keyword(self, t):
-        r'&[-a-zA-Z_]'
+        r"""&[-a-zA-Z_]"""
         t.value = self._make_token(t, 'KEYWORD', t.value)
         return t
 
     def t_newline(self, t):
-        r'\n+'
+        r"""\n+"""
         # this is a bit awkward - we have to send individual newlines to the
         # tracker.  This should handle a regex that matches more than just
         # newlines  (not sure if that will ever be necessary).
@@ -99,7 +111,7 @@ class Tokenizer(object):
     t_ignore = " \t"
 
     def t_STRING(self, t):
-        r'"([^"]|(\\")|\\)*"'
+        r'"([^"]|(\\")|\\)*\"'
         t.value = self._make_token(t, 'STRING', t.value[1:-1])
         return t
 
@@ -120,7 +132,7 @@ class Tokenizer(object):
 
     def t_PAREN(self, t):
         r'[()]'
-        print('t=%s'%str(t))
+        print('t=%s' % str(t))
         if t.value == '(':
             t.value = self._make_token(t, 'LPAREN', '(')
         elif t.value == ')':
@@ -138,12 +150,12 @@ class Tokenizer(object):
         return t
 
     def t_IQUOTE(self, t):
-        r'[!]'
+        r"""[!]"""
         t.value = self._make_token(t, 'IQUOTE', t.value)
         return t
 
     def t_COMMENT(self, t):
-        r';[^\n]'
+        r""";[^\n]*"""
         t.value = self._make_token(t, 'COMMENT', t.value)
         return t
 

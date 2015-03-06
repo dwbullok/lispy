@@ -1,10 +1,10 @@
 import unittest
 from collections import namedtuple
 
-from lispy.interpreter.scope import Scope, ArgExpr
+from lispy.interpreter.scope import Scope
 from lispy.interpreter.datatypes import ExprSeq, List, \
     FunctionCall, Symbol
-from lispy.common import Syn, TokenPos
+from lispy.common import Syn, TokenPos, ArgExpr
 from lispy.interpreter.error import VarNameNotFoundError
 
 

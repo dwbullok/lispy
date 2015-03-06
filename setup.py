@@ -11,6 +11,6 @@ setup(
     author_email='dan@codeviking.com, lambethben@gmail.com',
     description='Model lisp-ish interpreter',
     test_suite='nose.collector',
-    tests_require=['nose']
+    tests_require=['nose', 'typing', 'ply']
 
 )
