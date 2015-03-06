@@ -1,5 +1,9 @@
 import os
+
 from .error import UnitNotFoundError
+from codeviking.contracts import check_sig, Option, Seq
+from ..common import TokenPos
+
 
 __author__ = 'Dan Bullok and Ben Lambeth'
 
@@ -9,14 +13,13 @@ __author__ = 'Dan Bullok and Ben Lambeth'
 
 # TODO: write tests
 
-
 class Loader(object):
-    '''
+    """
     Base class for a source code loader.
-    '''
+    """
 
     def load_unit(self, unit_name, pos=None):
-        '''
+        """
         :param unit_name: the name of the unit to load
         :type unit_name: str
         :param pos: the position in the source code where the load request
@@ -26,29 +29,32 @@ class Loader(object):
         :rtype: str
         :raises UnitNotFoundError: if the requested source unit cannot be
         found.
-        '''
+        """
         pass
 
-
+@check_sig
 class DictLoader(Loader):
-    '''
+    """
     A source code loader that retrieves units from a dict
-    '''
+    """
 
-    def __init__(self, units):
-        '''
+    def __init__(self, units:dict):
+        """
         :param units: the dict containing unit_name -> unit_text items
         :type units: dict
-        '''
+        """
         self._units = units
 
-    def load_unit(self, unit_name, pos=None):
-        '''
+    def load_unit(self, unit_name:str, pos:Option(TokenPos)=None):
+        """
+
         :param unit_name: the name of the unit to load
         :type unit_name: str or StaticDatum of type str
-        '''
+        :param pos: The position within the source where the load request was
+                    made.
+        """
         # TODO: ensure that unit_name.value is actually a string.
-        n = unit_name if isinstance(unit_name,str) else unit_name.value
+        n = unit_name if isinstance(unit_name, str) else unit_name.value
         try:
             s = self._units.get(n)
             return s
@@ -56,31 +62,31 @@ class DictLoader(Loader):
             p = pos if not hasattr(unit_name, 'value') else unit_name.pos
             raise UnitNotFoundError(p, n)
 
-
+@check_sig
 class FileSysLoader(Loader):
-    '''
+    """
     A Source code loader that retrieves units from a file system.
 
     Takes a list of directories to search.  When a unit is requested,
     the directories are searched in order.
-    '''
+    """
 
-    def __init__(self, module_dirs):
-        '''
+    def __init__(self, module_dirs: Seq(str)):
+        """
         :param module_dirs: the directories to search for units
         :type module_dirs: list[str]
-        '''
+        """
         self._module_dirs = module_dirs
 
-    def load_unit(self, unit_name, pos=None):
+    def load_unit(self, unit_name: str, pos:Option(TokenPos)=None):
         for d in self._module_dirs:
             content = self._load(unit_name, d)
             if content is not None:
                 return content
         raise UnitNotFoundError(pos, unit_name)
 
-    def _load(self, unit_name, root_dir):
-        '''
+    def _load(self, unit_name:str, root_dir:str):
+        """
         Attempt to load a unit from a file.  The file name is the unit_name
         appended to the root_dir.
         :param unit_name: the unit name to attempt to load
@@ -90,7 +96,7 @@ class FileSysLoader(Loader):
         :return: the content of the file if found, or None if the file does
         not exist.
         :rtype: str or None
-        '''
+        """
         # TODO: Handle file read errors such as permission errors, etc.
         p = os.path.join(root_dir, unit_name)
         if os.path.exists(p) and os.path.isfile(p):

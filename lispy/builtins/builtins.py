@@ -1,15 +1,16 @@
-'''
+"""
     Builtin functions for the interpreter.
-'''
+"""
 
 __author__ = 'Dan Bullok and Ben Lambeth'
 
 # TODO: the user should be able to specify the set of builtins to load into
 # an interpreter.
 
-
-from ..interpreter.error import LispySyntaxError,ArgCountError
-import operator, functools
+import operator
+import functools
+from ..common import ArgExpr
+from ..interpreter.error import LispySyntaxError, ArgCountError
 
 
 def ifBuiltin(parent_scope, condition, true_expr, false_expr):
@@ -51,14 +52,15 @@ def divBuiltin(parent_scope, *args):
 
 
 def compareBuiltin(op):
-    '''
+    """
     Create a comparison operator function.
 
     :param op: operator function to use for comparison
     :type op: (any, any) -> bool
     :return: comparison function suitable for use as a builtin
 
-    '''
+    """
+
     def f(parent_scope, *args):
         last_value = args[0].evaluate(parent_scope)
         for a in args[1:]:
@@ -68,6 +70,7 @@ def compareBuiltin(op):
                 continue
             return False
         return True
+
     return f
 
 
@@ -83,7 +86,7 @@ andBuiltin = compareBuiltin(lambda x, y: x and y)
 
 def whileBuiltin(parent_scope, cond, *body):
     last_value = None
-    while (cond.evaluate(parent_scope)):
+    while cond.evaluate(parent_scope):
         for a in body:
             last_value = a.evaluate(parent_scope)
     return last_value
@@ -95,6 +98,7 @@ def beginBuiltin(parent_scope, *body):
         last_value = a.evaluate(parent_scope)
     return last_value
 
+
 def printBuiltin(parent_scope, *args):
     last_value = None
     for a in args:
@@ -102,21 +106,24 @@ def printBuiltin(parent_scope, *args):
         print(last_value)
     return last_value
 
+
 def loadBuiltinMaker(interpreter):
     def loadBuiltin(parent_scope, *unit_names):
-        assert (len(unit_names)>=1)
-        result=None
+        assert (len(unit_names) >= 1)
+        result = None
         for unit in unit_names:
             result = interpreter.evaluate_unit(unit)
         return result
+
     return loadBuiltin
+
 
 def optional_keyword(*args):
     arg_dict = {}
     for a in args:
-        if a.type == 'ID':
+        if a.stype == 'ID':
             arg_dict[a.value] = None
-        elif a.type == 'LIST':
+        elif a.stype == 'LIST':
             if len(a.value) != 2:
                 raise LispySyntaxError(a.pos,
                                        "Default argument must be defined as "
@@ -125,18 +132,22 @@ def optional_keyword(*args):
             arg_dict[name] = def_val
     return arg_dict
 
+
 def rest_keyword(args):
-    if len(args)>1:
+    if len(args) > 1:
         raise LispySyntaxError(args[0].pos,
                                "&rest keyword only allows one id.")
     arg_name = args[0]
     arg_dict = {arg_name: []}
     return arg_dict
 
+
 from ..interpreter.datatypes import Quote
+
 
 def key_keyword(*args):
     return optional_keyword(*args)
+
 
 def quoteBuiltin(parent_scope, arg):
     return Quote(arg.pos, arg)
@@ -145,10 +156,12 @@ def quoteBuiltin(parent_scope, arg):
 def listBuiltin(parent_scope, *args):
     return [a.evaluate(parent_scope) for a in args]
 
+
 def defunBuiltin(parent_scope, name, args, body):
     f = FunctionDef(args, body)
     setBuiltin(parent_scope, name, f)
     return f
+
 
 def setBuiltin(parent_scope, expr, value):
     name = expr.evaluate(parent_scope)
@@ -156,9 +169,10 @@ def setBuiltin(parent_scope, expr, value):
     parent_scope.assign(name, v)
     return v
 
+
 def setqBuiltin(parent_scope, name, value):
     expr = quoteBuiltin(parent_scope, name)
-    return setBuiltin(expr,value)
+    return setBuiltin(parent_scope, expr, value)
 
 
 def split_arg_list(arg_list, interpreter_keywords):
@@ -167,7 +181,7 @@ def split_arg_list(arg_list, interpreter_keywords):
     current = 'positional'
     idx = 0
     for a in arg_list:
-        if a.type=='KEYWORD':
+        if a.stype == 'KEYWORD':
             current = a.value
             result[current] = list()
         else:
@@ -175,29 +189,30 @@ def split_arg_list(arg_list, interpreter_keywords):
             idx += 1
     return result
 
-from ..common import ArgExpr
 
 class FunctionDef(object):
-    '''
+    """
     A function definition.
-    '''
+    """
 
-    def __init__(self, args, body,
+    def __init__(self,
+                 args,
+                 body,
                  interpreter_keywords=None,
                  safe_arg_keywords=None):
-        '''
+        """
         :param args: the arguments this function takes
         :type args: a list of identifier tokens
         :param body: the body of the function
         :type body: ExprSeq
-        '''
+        """
         # if safe_arg_keywords is None:
-        #     safe_arg_keywords = set()
+        # safe_arg_keywords = set()
         #
         # if interpreter_keywords is None:
         #     interpreter_keywords = dict()
         #
-        # keywords = tuple(a.value for a in args if a.type == 'KEYWORD')
+        # keywords = tuple(a.value for a in args if a.stype == 'KEYWORD')
         # if len(keywords) > 0:
         #     if keywords not in safe_arg_keywords:
         #         raise SyntaxError("Illegal keyword sequence: %s" % str(
@@ -216,10 +231,12 @@ class FunctionDef(object):
         self._body = body
 
     def __call__(self, parent_scope, *arg_vals):
-        if (len(self._args) != len(arg_vals)):
+        #TODO: function calls should pass position information, so we can
+        # report any failure location.
+        if len(self._args) != len(arg_vals):
             raise ArgCountError("Argument count mismatch.  Expected %d args "
-                                "but received %d."%(len(self._args),
-                                                    len(arg_vals)))
+                                "but received %d." % (len(self._args),
+                                                      len(arg_vals)))
         scope = parent_scope.make_child_scope()
         for (id, val) in zip(self._args, arg_vals):
             # we store the values of the args - they might not actually be
@@ -260,7 +277,7 @@ global_builtins = {
 
 #: Default set of interpreter builtins
 
-interpreter_builtins =  {
+interpreter_builtins = {
     'load': loadBuiltinMaker
 }
 
@@ -270,7 +287,7 @@ interpreter_keywords = {
     '&key': key_keyword,
 }
 
-safe_arg_keywords = {('&optional','&rest'),
+safe_arg_keywords = {('&optional', '&rest'),
                      ('&rest',),
                      ('&optional',),
                      ('&key',)}
