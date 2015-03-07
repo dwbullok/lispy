@@ -1,1 +1,0 @@
-../../library/codeviking.python/contract/codeviking/contract/__init__.py
