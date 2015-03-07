@@ -56,7 +56,7 @@ def check_result(source, expected_result):
         loader_dict = source
     loader = DictLoader(loader_dict)
     interp = Interpreter(loader)
-/\//\//\/    test_result = interp.run_module('main')
+    test_result = interp.run_module('main')
     assert test_result == expected_result
 
 

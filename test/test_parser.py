@@ -73,7 +73,7 @@ TOKENS = [  # 1
 
 from copy import copy
 from lispy.interpreter import Tokenizer, Parser
-from lispy.common import Syn, AstNode
+from lispy.common import Syn, AstNode, TokenPos
 
 from pprint import PrettyPrinter
 
@@ -84,9 +84,10 @@ def test_tokenizer():
     tokenizer = Tokenizer()
     tokens = tokenizer.tokenize('main', EXAMPLE)
     expected_tokens = copy(TOKENS)
+    tpos = TokenPos('test',1,1)
     while len(tokens) > 0:
         tt = tokens.pop(0)
-        et = Syn(*(TOKENS.pop(0) + (None,)))
+        et = Syn(*(TOKENS.pop(0) + (tpos,)))
         print((tt, et))
         assert tokens_match(tt, et)
 

@@ -8,7 +8,6 @@ __author__ = 'Dan Bullok and Ben Lambeth'
 from .datatypes import Symbol, is_valid_defn
 contracts.enabled=False
 @check_sig
-
 class Scope(object):
     """
     Represents scope.  Contains definitions bound to identifiers.
